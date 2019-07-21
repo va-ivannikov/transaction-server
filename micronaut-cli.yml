@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: com.vip.server
+---
+testFramework: junit
+sourceLanguage: java

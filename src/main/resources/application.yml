@@ -1,0 +1,6 @@
+micronaut:
+  server:
+    maxRequestSize: 1MB
+    host: localhost
+  application:
+    name: vip
