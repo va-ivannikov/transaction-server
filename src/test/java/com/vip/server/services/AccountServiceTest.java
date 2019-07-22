@@ -21,12 +21,12 @@ public class AccountServiceTest extends AbstractTest {
         assertEquals(expectedEmail, createdAccount.getEmail());
         assertTrue(createdAccount.getId() > 0);
         assertFalse(createdAccount.isLocked());
-        assertFalse(createdAccount.isClosed());
+        assertFalse(createdAccount.isDeleted());
     }
 
     @Test
     void findNotExistsAccount() {
-        Optional<Account> account = accountService.find(Integer.MAX_VALUE);
+        Optional<Account> account = accountService.findAccount(Integer.MAX_VALUE);
         assertTrue(account.isEmpty());
     }
 
@@ -34,7 +34,7 @@ public class AccountServiceTest extends AbstractTest {
     void findAccount() {
         String expectedEmail = getRandomEmail();
         Account createdAccount = accountService.createAccount(expectedEmail);
-        Optional<Account> optAccount = accountService.find(createdAccount.getId());
+        Optional<Account> optAccount = accountService.findAccount(createdAccount.getId());
         assertTrue(optAccount.isPresent());
         Account account = optAccount.get();
         assertEquals(expectedEmail, account.getEmail());

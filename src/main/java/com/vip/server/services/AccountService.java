@@ -1,7 +1,7 @@
 package com.vip.server.services;
 
 import com.vip.server.domain.Account;
-import com.vip.server.exceptions.account.AccountException;
+import com.vip.server.exceptions.account.AbstractAccountException;
 
 import java.util.Optional;
 
@@ -9,9 +9,9 @@ public interface AccountService {
 
     Account createAccount(String email);
 
-    Optional<Account> find(int id);
+    Optional<Account> findAccount(int accountId);
 
-    Account validateAccountForPaymentsAndGet(int accountId) throws AccountException;
+    void checkIsAccountReadyForPayments(int accountId) throws AbstractAccountException;
 
-    Account validateActiveAccountAndGetIt(int accountId) throws AccountException;
+    void checkAccountIsActive(int accountId) throws AbstractAccountException;
 }

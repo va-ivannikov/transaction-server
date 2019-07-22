@@ -2,9 +2,9 @@ package com.vip.server.domain;
 
 import java.util.StringJoiner;
 
-public class Account extends AbstractId<Integer> {
+public class Account extends AbstractEntityWithId<Integer> {
     private volatile boolean locked = false;
-    private boolean closed = false;
+    private boolean deleted = false;
     private String email;
 
     private Account() {} //for deserialization
@@ -24,8 +24,8 @@ public class Account extends AbstractId<Integer> {
         return locked;
     }
 
-    public boolean isClosed() {
-        return closed;
+    public boolean isDeleted() {
+        return deleted;
     }
 
     public void setId(Integer id) {
@@ -41,7 +41,7 @@ public class Account extends AbstractId<Integer> {
         return new StringJoiner(", ", Account.class.getSimpleName() + "[", "]")
                 .add("id=" + getId())
                 .add("locked=" + isLocked())
-                .add("closed=" + isClosed())
+                .add("deleted=" + isDeleted())
                 .add("email='" + getEmail() + "'")
                 .toString();
     }

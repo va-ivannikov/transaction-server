@@ -1,9 +1,10 @@
 package com.vip.server.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class Hold extends AbstractId<Integer> {
+public class Hold extends AbstractEntityWithId<Integer> {
     public enum HoldStatus {
         ACTIVE, DONE, CANCELED
     }
@@ -14,9 +15,9 @@ public class Hold extends AbstractId<Integer> {
     private String openingReason;
     private String closingReason;
     private int accountId;
-    private double amount;
+    private BigDecimal amount;
 
-    public Hold(int accountId, double amount, String openingReason) {
+    public Hold(int accountId, BigDecimal amount, String openingReason) {
         this.holdStatus = HoldStatus.ACTIVE;
         this.openingTime = LocalDateTime.now();
         this.closingTime = openingTime;
@@ -27,7 +28,7 @@ public class Hold extends AbstractId<Integer> {
     }
 
     public Hold(HoldStatus holdStatus, LocalDateTime openingTime, LocalDateTime closingTime, String openingReason,
-                String closingReason, int accountId, double amount) {
+                String closingReason, int accountId, BigDecimal amount) {
         this.holdStatus = holdStatus;
         this.openingTime = openingTime;
         this.closingTime = closingTime;
@@ -37,7 +38,7 @@ public class Hold extends AbstractId<Integer> {
         this.amount = amount;
     }
 
-    public void markAsClosed(String closingReason) {
+    public void markAsComplete(String closingReason) {
         this.holdStatus = HoldStatus.DONE;
         this.closingTime = LocalDateTime.now();
         this.closingReason = closingReason;
@@ -81,7 +82,7 @@ public class Hold extends AbstractId<Integer> {
         return accountId;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 }

@@ -1,6 +1,6 @@
 package com.vip.server.repositories;
 
-import com.vip.server.domain.AbstractId;
+import com.vip.server.domain.AbstractEntityWithId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-abstract class Repository<OBJ extends AbstractId<ID>, ID> {
+abstract class Repository<OBJ extends AbstractEntityWithId<ID>, ID> {
     private final static Logger logger = LoggerFactory.getLogger(Repository.class);
     ConcurrentMap<ID, OBJ> storage = new ConcurrentHashMap<>();
 

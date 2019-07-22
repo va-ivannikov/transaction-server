@@ -1,9 +1,9 @@
 package com.vip.server.services;
 
 import com.vip.server.domain.Account;
-import com.vip.server.exceptions.account.AccountException;
+import com.vip.server.exceptions.account.AbstractAccountException;
+import com.vip.server.exceptions.account.AccountIsLockedForPaymentOperationException;
 import com.vip.server.exceptions.account.AccountNotFoundException;
-import com.vip.server.exceptions.account.CantDoPaymentOnLockedException;
 import com.vip.server.repositories.AccountRepository;
 
 import javax.inject.Singleton;
@@ -23,28 +23,26 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Optional<Account> find(int id) {
-        return accountRepository.findById(id);
+    public Optional<Account> findAccount(int accountId) {
+        return accountRepository.findById(accountId);
     }
 
     @Override
-    public Account validateAccountForPaymentsAndGet(int accountId) throws AccountException {
-        Account account = find(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (account.isClosed()) {
-            throw new CantDoPaymentOnLockedException("Account [" + accountId + " is closed/archived.");
+    public void checkIsAccountReadyForPayments(int accountId) throws AbstractAccountException {
+        Account account = findAccount(accountId).orElseThrow(() -> new AccountNotFoundException(accountId));
+        if (account.isDeleted()) {
+            throw new AccountIsLockedForPaymentOperationException(accountId);
         }
         if (account.isLocked()) {
-            throw new CantDoPaymentOnLockedException("Account [" + accountId + " is locked.");
+            throw new AccountIsLockedForPaymentOperationException(accountId);
         }
-        return account;
     }
 
     @Override
-    public Account validateActiveAccountAndGetIt(int accountId) throws AccountException {
-        Account account = find(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (account.isClosed()) {
-            throw new CantDoPaymentOnLockedException("Account [" + accountId + " is closed/archived.");
+    public void checkAccountIsActive(int accountId) throws AbstractAccountException {
+        Account account = findAccount(accountId).orElseThrow(() -> new AccountNotFoundException(accountId));
+        if (account.isDeleted()) {
+            throw new AccountIsLockedForPaymentOperationException(accountId);
         }
-        return account;
     }
 }

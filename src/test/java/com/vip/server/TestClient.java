@@ -1,24 +1,25 @@
 package com.vip.server;
 
-import com.vip.server.domain.Account;
-import com.vip.server.domain.Balance;
+import com.vip.server.domain.ui.AccountUI;
+import com.vip.server.domain.ui.BalanceUI;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Put;
+import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.reactivex.Single;
 
 @Client("/")
-public interface TestClient {
+public interface TestClient extends HttpClient {
 
     @Put("/accounts")
-    Single<Account> createAccount(String email);
+    Single<AccountUI> createAccount(String email);
 
     @Put("/accounts/{accountId}/money")
-    Single<Balance> addMoneyToAccount(int accountId, double amount);
+    Single<BalanceUI> addMoneyToAccount(int accountId, double amount);
 
     @Get("/accounts/{accountId}/money")
-    Single<Balance> getAccountBalance(int accountId);
+    Single<BalanceUI> getAccountBalance(int accountId);
 
     @Get("/accounts/{accountId}")
-    Single<Account> getAccount(int accountId);
+    Single<AccountUI> getAccount(int accountId);
 }

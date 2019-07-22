@@ -6,6 +6,7 @@ import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ public class BalanceServiceCronTest extends AbstractTest {
                 "lived active hold",
                 "",
                 1,
-                10.0
+                BigDecimal.TEN
         );
         Hold hold25 = new Hold(
                 Hold.HoldStatus.ACTIVE,
@@ -38,7 +39,7 @@ public class BalanceServiceCronTest extends AbstractTest {
                 "test",
                 "",
                 1,
-                10.0
+                BigDecimal.TEN
         );
         Hold holdCanceled = new Hold(
                 Hold.HoldStatus.CANCELED,
@@ -47,7 +48,7 @@ public class BalanceServiceCronTest extends AbstractTest {
                 "test",
                 "",
                 1,
-                10.0
+                BigDecimal.TEN
         );
         Hold holdDone = new Hold(
                 Hold.HoldStatus.DONE,
@@ -56,7 +57,7 @@ public class BalanceServiceCronTest extends AbstractTest {
                 "test",
                 "",
                 1,
-                10.0
+                BigDecimal.TEN
         );
         Hold expectedHold = holdRepository.save(hold23);
         holdRepository.save(hold25);
@@ -64,7 +65,7 @@ public class BalanceServiceCronTest extends AbstractTest {
         holdRepository.save(holdDone);
         assertEquals(4, holdRepository.findAll().size());
 
-        balanceService.validateOutdatedHolds();
+        balanceService.closeOutdatedHolds();
         List<Hold> allHolds = holdRepository.findAll();
         assertEquals(4, allHolds.size());
         List<Hold> activeHolds = allHolds.stream()

@@ -2,10 +2,10 @@ package com.vip.server.domain;
 
 import java.beans.Transient;
 
-public abstract class AbstractId<T> {
+public abstract class AbstractEntityWithId<T> {
     private T id;
 
-    public AbstractId() {
+    public AbstractEntityWithId() {
         this.id = null;
     }
 

@@ -1,24 +1,24 @@
-package com.vip.server.domain;
+package com.vip.server.domain.ui;
 
-public class Result {
+public class ResultUI {
     private boolean isSuccess;
     private String action;
     private String error;
 
-    private Result() {}
+    private ResultUI() {}
 
-    private Result(boolean isSuccess, String action, String error) {
+    private ResultUI(boolean isSuccess, String action, String error) {
         this.isSuccess = isSuccess;
         this.error = error;
         this.action = action;
     }
 
-    public static Result success(String action) {
-        return new Result(true, action, null);
+    public static ResultUI success(String action) {
+        return new ResultUI(true, action, null);
     }
 
-    public static Result fail(String error) {
-        return new Result(false, null, error);
+    public static ResultUI fail(String error) {
+        return new ResultUI(false, null, error);
     }
 
     public boolean isSuccess() {
