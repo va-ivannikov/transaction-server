@@ -1,6 +1,5 @@
 package com.vip.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vip.server.domain.ui.AccountUI;
 import com.vip.server.domain.ui.BalanceUI;
 import io.micronaut.runtime.server.EmbeddedServer;
@@ -11,22 +10,15 @@ import org.junit.jupiter.api.Test;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.http.HttpClient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
 public class IntegrationTest {
-    //    @Inject
-//    TestClient client;
+    private static String testEmail = "test1.email";
     @Inject
     private EmbeddedServer server;
-
-    private static String testEmail = "test1.email";
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private HttpClient httpClient = HttpClient.newHttpClient();
-
     private JavaSimpleClient client = new JavaSimpleClient();
 
     @BeforeEach
@@ -75,16 +67,4 @@ public class IntegrationTest {
         assertEquals(BigDecimal.valueOf(50.0), accountBalance2.getCurrent(),
                 "Balance should be $50.");
     }
-
-//    @Test
-//    void createAccountAddMoneyAndCheckBalance() {
-//        double amount = 100.0;
-//        AccountUI createdAccount = client.createAccount(testEmail).blockingGet();
-//        client.addMoneyToAccount(createdAccount.getId(), amount).blockingGet();
-//        BalanceUI accountBalance = client.getAccountBalance(createdAccount.getId()).blockingGet();
-//        assertEquals(createdAccount.getId(), accountBalance.getAccountId(),
-//                "AccountId from account and balance should be same.");
-//        assertEquals(amount, accountBalance.getCurrent(),
-//                "Balance should be $" + amount + ".");
-//    }
 }
