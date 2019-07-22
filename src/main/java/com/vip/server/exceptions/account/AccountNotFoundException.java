@@ -1,7 +1,7 @@
 package com.vip.server.exceptions.account;
 
-public class AccountNotFoundException extends AccountException {
-    public AccountNotFoundException(String message) {
-        super(message);
+public class AccountNotFoundException extends AbstractAccountException {
+    public AccountNotFoundException(int accountId) {
+        super("Account [" + accountId + "] not found.");
     }
 }

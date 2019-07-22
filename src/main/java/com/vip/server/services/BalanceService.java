@@ -1,14 +1,16 @@
 package com.vip.server.services;
 
 import com.vip.server.domain.Balance;
-import com.vip.server.domain.Result;
-import com.vip.server.exceptions.account.AccountException;
-import com.vip.server.exceptions.balance.BalanceException;
+import com.vip.server.domain.ui.ResultUI;
+import com.vip.server.exceptions.account.AbstractAccountException;
+import com.vip.server.exceptions.balance.AbstractBalanceException;
+
+import java.math.BigDecimal;
 
 public interface BalanceService {
-    boolean addMoneyToAccount(int accountId, Double amount, String reason) throws AccountException, BalanceException;
+    boolean addMoneyToAccount(int accountId, BigDecimal amount, String reason) throws AbstractAccountException, AbstractBalanceException;
 
-    Balance getBalance(int accountId) throws AccountException;
+    Balance getBalance(int accountId) throws AbstractAccountException;
 
-    Result transferMoneyFromAccountTo(int fromId, int toId, double amount) throws BalanceException, AccountException;
+    ResultUI transferMoneyFromAccountTo(int fromAccountById, int toAccountById, BigDecimal amount) throws AbstractBalanceException, AbstractAccountException;
 }

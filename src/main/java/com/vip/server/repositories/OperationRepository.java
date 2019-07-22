@@ -4,6 +4,7 @@ import com.vip.server.domain.Operation;
 import com.vip.server.domain.OperationType;
 
 import javax.inject.Singleton;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -26,13 +27,13 @@ public class OperationRepository extends Repository<Operation, Integer> {
                 .collect(Collectors.toList());
     }
 
-    public double getSumByOperationAndAccountId(OperationType operationType, Integer accountId) {
+    public BigDecimal getSumByOperationAndAccountId(OperationType operationType, Integer accountId) {
         return storage.values().stream()
                 .filter(operation ->
                         operation.getAccountId().equals(accountId)
                                 && operation.getOperationType().equals(operationType))
                 .map(Operation::getAmount)
-                .reduce(Double::sum)
-                .orElse(0.0);
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
     }
 }

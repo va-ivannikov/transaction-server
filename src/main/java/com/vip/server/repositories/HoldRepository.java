@@ -3,6 +3,7 @@ package com.vip.server.repositories;
 import com.vip.server.domain.Hold;
 
 import javax.inject.Singleton;
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
@@ -17,11 +18,11 @@ public class HoldRepository extends Repository<Hold, Integer> {
         return super.save(account);
     }
 
-    public double countHoldSumByAccountId(int accountId) {
+    public BigDecimal countHoldSumByAccountId(int accountId) {
         return storage.values().stream()
                 .filter(hold -> hold.isActive() && hold.getAccountId() == accountId)
                 .map(Hold::getAmount)
-                .reduce(Double::sum)
-                .orElse(0.0);
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
     }
 }

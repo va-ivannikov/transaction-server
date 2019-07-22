@@ -1,20 +1,25 @@
 package com.vip.server.domain;
 
+import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 public class Balance {
-    private double current;
-    private Integer accountId;
+    private BigDecimal totalDeposit;
+    private BigDecimal totalWithdraw;
+    private BigDecimal totalHold;
+    private int accountId;
 
     private Balance() {}
 
-    public Balance(Integer accountId, double current) {
-        this.current = current;
+    public Balance(int accountId, BigDecimal totalDeposit, BigDecimal totalWithdraw, BigDecimal totalHold) {
         this.accountId = accountId;
+        this.totalDeposit = totalDeposit;
+        this.totalWithdraw = totalWithdraw;
+        this.totalHold = totalHold;
     }
 
-    public double getCurrent() {
-        return current;
+    public BigDecimal getCurrent() {
+        return totalDeposit.subtract(totalWithdraw).subtract(totalHold);
     }
 
     public Integer getAccountId() {
@@ -25,7 +30,9 @@ public class Balance {
     public String toString() {
         return new StringJoiner(", ", Balance.class.getSimpleName() + "[", "]")
                 .add("accountId=" + accountId)
-                .add("current=" + current)
+                .add("deposited=" + totalDeposit)
+                .add("withdraw=" + totalWithdraw)
+                .add("hold=" + totalHold)
                 .toString();
     }
 }
