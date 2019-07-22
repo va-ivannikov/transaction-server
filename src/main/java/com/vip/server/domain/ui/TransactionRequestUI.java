@@ -10,6 +10,12 @@ public class TransactionRequestUI {
 
     private TransactionRequestUI() {}
 
+    public TransactionRequestUI(int fromAccountId, int toAccountId, BigDecimal amount) {
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
+        this.amount = amount;
+    }
+
     public int getFromAccountId() {
         return fromAccountId;
     }

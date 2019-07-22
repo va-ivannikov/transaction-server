@@ -11,10 +11,8 @@ import com.vip.server.exceptions.ui.InvalidAccountIdException;
 import com.vip.server.exceptions.ui.InvalidMoneyAmountException;
 import com.vip.server.services.BalanceService;
 import io.micronaut.context.annotation.Parameter;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
-import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +51,7 @@ public class BalanceController {
     @Status(HttpStatus.OK)
     @Consumes(MediaType.APPLICATION_JSON)
     @Post(uri = "/transaction")
-    public MutableHttpResponse<ResultUI> transactionBetweenAccounts(@Body TransactionRequestUI transactionRequestUI)
+    public ResultUI transactionBetweenAccounts(@Body TransactionRequestUI transactionRequestUI)
             throws AbstractBalanceException, AbstractAccountException, AbstractUserRequestException {
         logger.debug("transaction:" + transactionRequestUI);
         int fromAccountId = transactionRequestUI.getFromAccountId();
@@ -62,10 +60,7 @@ public class BalanceController {
         checkAccountIdIsPositive(fromAccountId);
         checkAccountIdIsPositive(toAccountId);
         checkAmountMoreThanZero(amount);
-        ResultUI resultUI = balanceService.transferMoneyFromAccountTo(fromAccountId, toAccountId, amount);
-        return resultUI.isSuccess()
-                ? HttpResponse.ok(resultUI)
-                : HttpResponse.badRequest(resultUI);
+        return balanceService.transferMoneyFromAccountTo(fromAccountId, toAccountId, amount);
     }
 
     private void checkAmountMoreThanZero(BigDecimal amount) throws InvalidMoneyAmountException {

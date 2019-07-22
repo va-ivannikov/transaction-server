@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vip.server.domain.ui.AccountUI;
 import com.vip.server.domain.ui.BalanceUI;
 import com.vip.server.domain.ui.ResultUI;
+import com.vip.server.domain.ui.TransactionRequestUI;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -59,12 +61,11 @@ public class JavaSimpleClient {
 
     public ResultUI transfer(int fromAccountById, int toAccountById, double amount) throws IOException, InterruptedException {
         URI addMoney = URI.create(host + "/transaction");
+        TransactionRequestUI transactionRequestUI = new TransactionRequestUI(fromAccountById, toAccountById, BigDecimal.valueOf(amount));
         HttpRequest addMoneyRequest = HttpRequest.newBuilder()
-                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
                 .uri(addMoney)
-                .POST(HttpRequest.BodyPublishers.ofString(
-                        String.format("\"fromAccountId\":%s, \"toAccountId\":%s, \"amount\":%s",
-                                fromAccountById, toAccountById, amount)))
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(transactionRequestUI)))
                 .build();
         HttpResponse getBalanceResponse = httpClient.send(addMoneyRequest, HttpResponse.BodyHandlers.ofString());
         return objectMapper.readValue(getBalanceResponse.body().toString(), ResultUI.class);

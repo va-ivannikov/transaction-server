@@ -1,14 +1,14 @@
 package com.vip.server.domain.ui;
 
 public class ResultUI {
-    private boolean isSuccess;
+    private boolean success;
     private String action;
     private String error;
 
     private ResultUI() {}
 
-    private ResultUI(boolean isSuccess, String action, String error) {
-        this.isSuccess = isSuccess;
+    private ResultUI(boolean success, String action, String error) {
+        this.success = success;
         this.error = error;
         this.action = action;
     }
@@ -22,7 +22,7 @@ public class ResultUI {
     }
 
     public boolean isSuccess() {
-        return isSuccess;
+        return success;
     }
 
     public String getAction() {
