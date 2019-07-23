@@ -16,7 +16,7 @@ import javax.validation.constraints.NotBlank;
 @Controller
 public class AccountController {
     private final static Logger logger = LoggerFactory.getLogger(AccountController.class);
-    private AccountService accountService;
+    private final AccountService accountService;
 
     public AccountController(AccountService accountService) {
         super();

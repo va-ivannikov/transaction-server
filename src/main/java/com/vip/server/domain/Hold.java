@@ -9,22 +9,16 @@ public class Hold extends AbstractEntityWithId<Integer> {
         ACTIVE, DONE, CANCELED
     }
 
+    private final LocalDateTime openingTime;
+    private final String openingReason;
+    private final int accountId;
+    private final BigDecimal amount;
     private HoldStatus holdStatus;
-    private LocalDateTime openingTime;
     private LocalDateTime closingTime;
-    private String openingReason;
     private String closingReason;
-    private int accountId;
-    private BigDecimal amount;
 
     public Hold(int accountId, BigDecimal amount, String openingReason) {
-        this.holdStatus = HoldStatus.ACTIVE;
-        this.openingTime = LocalDateTime.now();
-        this.closingTime = openingTime;
-        this.accountId = accountId;
-        this.amount = amount;
-        this.openingReason = openingReason;
-        this.closingReason = "";
+        this(HoldStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now(), openingReason, "", accountId, amount);
     }
 
     public Hold(HoldStatus holdStatus, LocalDateTime openingTime, LocalDateTime closingTime, String openingReason,
@@ -62,20 +56,8 @@ public class Hold extends AbstractEntityWithId<Integer> {
         return holdStatus == HoldStatus.ACTIVE;
     }
 
-    public LocalDateTime getOpeningTime() {
-        return openingTime;
-    }
-
-    public LocalDateTime getClosingTime() {
-        return closingTime;
-    }
-
     public String getOpeningReason() {
         return openingReason;
-    }
-
-    public String getClosingReason() {
-        return closingReason;
     }
 
     public int getAccountId() {

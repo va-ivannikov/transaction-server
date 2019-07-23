@@ -11,11 +11,8 @@ public class HoldRepository extends Repository<Hold, Integer> {
     private final AtomicInteger counter = new AtomicInteger(0);
 
     @Override
-    public Hold save(Hold account) {
-        if (account.isNew()) {
-            account.setId(counter.incrementAndGet());
-        }
-        return super.save(account);
+    Integer getNextId() {
+        return counter.incrementAndGet();
     }
 
     public BigDecimal countHoldSumByAccountId(int accountId) {

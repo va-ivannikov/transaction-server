@@ -4,11 +4,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Operation extends AbstractEntityWithId<Integer> {
-    private LocalDateTime localDateTime;
-    private Integer accountId;
-    private BigDecimal amount;
-    private String reason;
-    private OperationType operationType;
+    private final LocalDateTime localDateTime;
+    private final Integer accountId;
+    private final BigDecimal amount;
+    private final String reason;
+    private final OperationType operationType;
+
+    public enum  OperationType {
+        DEPOSIT, WITHDRAW
+    }
 
     public Operation(OperationType opType, Integer accountId, BigDecimal amount, String reason) {
         this.operationType = opType;
@@ -30,16 +34,8 @@ public class Operation extends AbstractEntityWithId<Integer> {
         return accountId;
     }
 
-    public void setAccountId(Integer accountId) {
-        this.accountId = accountId;
-    }
-
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
     }
 
     public OperationType getOperationType() {

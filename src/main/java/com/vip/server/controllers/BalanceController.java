@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 @Controller
 public class BalanceController {
     private final static Logger logger = LoggerFactory.getLogger(BalanceController.class);
-    private BalanceService balanceService;
+    private final BalanceService balanceService;
 
     public BalanceController(BalanceService balanceService) {
         super();

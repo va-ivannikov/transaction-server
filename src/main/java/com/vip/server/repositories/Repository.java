@@ -4,8 +4,6 @@ import com.vip.server.domain.AbstractEntityWithId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,20 +15,16 @@ abstract class Repository<OBJ extends AbstractEntityWithId<ID>, ID> {
     private final static Logger logger = LoggerFactory.getLogger(Repository.class);
     ConcurrentMap<ID, OBJ> storage = new ConcurrentHashMap<>();
 
+    abstract ID getNextId();
+
     public OBJ save(OBJ obj) {
+        if (obj.isNew()) {
+            obj.setId(getNextId());
+        }
         storage.put(obj.getId(), obj);
         logger.debug(String.format("%s: Object saved - %s",
                 this.getClass().getSimpleName() + "Object saved", obj));
         return obj;
-    }
-
-    private Type getIdType() {
-        ParameterizedType pType = (ParameterizedType) this.getClass().getGenericSuperclass();
-        return pType.getActualTypeArguments()[1];
-    }
-
-    public boolean existsById(ID id) {
-        return storage.containsKey(id);
     }
 
     public Optional<OBJ> findById(ID id) {
@@ -44,7 +38,9 @@ abstract class Repository<OBJ extends AbstractEntityWithId<ID>, ID> {
         return new ArrayList<>(storage.values());
     }
 
-    public boolean delete(OBJ obj) {
-        return (storage.containsKey(obj.getId()) && storage.remove(obj.getId(), obj));
+    public void delete(OBJ obj) {
+        if (storage.containsKey(obj.getId())) {
+            storage.remove(obj.getId(), obj);
+        }
     }
 }

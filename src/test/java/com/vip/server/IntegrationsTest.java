@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MicronautTest
-public class IntegrationTest {
+public class IntegrationsTest {
     private static String testEmail = "test1.email";
     @Inject
     private EmbeddedServer server;

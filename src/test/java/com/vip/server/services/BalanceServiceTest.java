@@ -7,6 +7,7 @@ import com.vip.server.exceptions.account.AccountNotFoundException;
 import com.vip.server.exceptions.balance.AbstractBalanceException;
 import com.vip.server.exceptions.balance.AmountShouldBePositiveException;
 import com.vip.server.exceptions.balance.OperationCantBePerformedOnTheSameAccount;
+import com.vip.server.repositories.OperationRepository;
 import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,9 +22,11 @@ public class BalanceServiceTest extends AbstractTest {
     private static final BigDecimal big100 = BigDecimal.valueOf(100);
     private static final BigDecimal big50 = BigDecimal.valueOf(50);
     @Inject
-    public AccountService accountService;
+    private AccountService accountService;
     @Inject
-    public BalanceService balanceService;
+    private BalanceService balanceService;
+    @Inject
+    private OperationRepository operationRepository;
 
     private Account account;
 
