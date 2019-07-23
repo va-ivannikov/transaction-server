@@ -69,6 +69,7 @@ public class BalanceServiceImpl implements BalanceService {
         checkAmountIsPositive(amount);
         accountService.checkIsAccountReadyForPayments(fromAccountById);
         accountService.checkIsAccountReadyForPayments(toAccountById);
+
         Optional<Hold> holdOptional = Optional.empty();
         Optional<Operation> depositOptional = Optional.empty();
         Optional<Operation> withdrawOptional = Optional.empty();
@@ -79,7 +80,7 @@ public class BalanceServiceImpl implements BalanceService {
             accountService.checkIsAccountReadyForPayments(toAccountById);
             depositOptional = Optional.of(operationRepository.save(Operation.deposit(toAccountById, amount, reason)));
             withdrawOptional = Optional.of(operationRepository.save(Operation.withdraw(fromAccountById, amount, reason)));
-            holdOptional.ifPresent(hold -> completeHold(hold, "Transfer complete."));
+            completeHold(holdOptional.get(), "Transfer complete.");
             logger.debug("Transfer complete.");
             return ResultUI.success(String.format("Transfer complete: $%s from account %s to %s.",
                     amount, fromAccountById, toAccountById));
@@ -106,16 +107,21 @@ public class BalanceServiceImpl implements BalanceService {
     private Hold createHoldForAccount(int accountId, BigDecimal amount, String reason) throws AbstractBalanceException, AbstractAccountException {
         logger.debug(String.format("Create hold for account[%s] on amount[%s] because: %s",
                 accountId, amount.toString(), reason));
-        if (getBalance(accountId).getCurrent().compareTo(amount) >= 0) {
-            final Hold hold = holdRepository.save(new Hold(accountId, amount, reason));
-            if (getBalance(accountId).getCurrent().compareTo(BigDecimal.ZERO) < 0) {
-                cancelHold(hold, "Not enough money after hold.");
+        try {
+            accountService.lockAccountById(accountId);
+            if (getBalance(accountId).getCurrent().compareTo(amount) >= 0) {
+                final Hold hold = holdRepository.save(new Hold(accountId, amount, reason));
+                if (getBalance(accountId).getCurrent().compareTo(BigDecimal.ZERO) < 0) {
+                    cancelHold(hold, "Not enough money after hold.");
+                    throw new NotEnoughMoneyForOperationException(accountId);
+                }
+                return hold;
+            } else {
+                logger.debug("Cancel creation because not enough money.");
                 throw new NotEnoughMoneyForOperationException(accountId);
             }
-            return hold;
-        } else {
-            logger.debug("Cancel creation because not enough money.");
-            throw new NotEnoughMoneyForOperationException(accountId);
+        } finally {
+            accountService.unlockAccountById(accountId);
         }
     }
 
