@@ -5,9 +5,8 @@ import java.util.StringJoiner;
 public class Account extends AbstractEntityWithId<Integer> {
     private volatile boolean locked = false;
     private boolean deleted = false;
-    private String email;
+    private final String email;
 
-    private Account() {} //for deserialization
     public Account(String email) {
         this.email = email;
     }

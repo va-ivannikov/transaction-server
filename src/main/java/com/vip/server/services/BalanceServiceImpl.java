@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.vip.server.domain.OperationType.DEPOSIT;
-import static com.vip.server.domain.OperationType.WITHDRAW;
+import static com.vip.server.domain.Operation.OperationType.DEPOSIT;
+import static com.vip.server.domain.Operation.OperationType.WITHDRAW;
 
 @Singleton
 public class BalanceServiceImpl implements BalanceService {
@@ -44,7 +44,7 @@ public class BalanceServiceImpl implements BalanceService {
     public boolean addMoneyToAccount(int accountId, BigDecimal amount, String reason) throws AbstractBalanceException, AbstractAccountException {
         checkAmountIsPositive(amount);
         accountService.checkIsAccountReadyForPayments(accountId);
-        operationRepository.save(new Operation(DEPOSIT, accountId, amount, reason));
+        operationRepository.save(Operation.deposit(accountId, amount, reason));
         return true;
     }
 
@@ -69,17 +69,18 @@ public class BalanceServiceImpl implements BalanceService {
         checkAmountIsPositive(amount);
         accountService.checkIsAccountReadyForPayments(fromAccountById);
         accountService.checkIsAccountReadyForPayments(toAccountById);
+
         Optional<Hold> holdOptional = Optional.empty();
         Optional<Operation> depositOptional = Optional.empty();
         Optional<Operation> withdrawOptional = Optional.empty();
         try {
-            String reason = String.format("Transfer amount[%s] between accounts: from [%s] to [%s] .",
+            final String reason = String.format("Transfer amount[%s] between accounts: from [%s] to [%s] .",
                     amount.toString(), fromAccountById, toAccountById);
             holdOptional = Optional.of(createHoldForAccount(fromAccountById, amount, reason));
             accountService.checkIsAccountReadyForPayments(toAccountById);
             depositOptional = Optional.of(operationRepository.save(Operation.deposit(toAccountById, amount, reason)));
             withdrawOptional = Optional.of(operationRepository.save(Operation.withdraw(fromAccountById, amount, reason)));
-            holdOptional.ifPresent(hold -> completeHold(hold, "Transfer complete."));
+            completeHold(holdOptional.get(), "Transfer complete.");
             logger.debug("Transfer complete.");
             return ResultUI.success(String.format("Transfer complete: $%s from account %s to %s.",
                     amount, fromAccountById, toAccountById));
@@ -96,7 +97,7 @@ public class BalanceServiceImpl implements BalanceService {
     @Scheduled(fixedRate = "24h")
     public void closeOutdatedHolds() {
         logger.debug("Close outdated holds initiate.");
-        List<Hold> outdated = holdRepository.findAll().stream()
+        final List<Hold> outdated = holdRepository.findAll().stream()
                 .filter(hold -> hold.isActive() && hold.lifeTimeIsMoreThanHours(24))
                 .collect(Collectors.toList());
         logger.debug("Outdated holds found: " + outdated.size());
@@ -106,16 +107,21 @@ public class BalanceServiceImpl implements BalanceService {
     private Hold createHoldForAccount(int accountId, BigDecimal amount, String reason) throws AbstractBalanceException, AbstractAccountException {
         logger.debug(String.format("Create hold for account[%s] on amount[%s] because: %s",
                 accountId, amount.toString(), reason));
-        if (getBalance(accountId).getCurrent().compareTo(amount) >= 0) {
-            Hold hold = holdRepository.save(new Hold(accountId, amount, reason));
-            if (getBalance(accountId).getCurrent().compareTo(BigDecimal.ZERO) < 0) {
-                cancelHold(hold, "Not enough money after hold.");
+        try {
+            accountService.lockAccountById(accountId);
+            if (getBalance(accountId).getCurrent().compareTo(amount) >= 0) {
+                final Hold hold = holdRepository.save(new Hold(accountId, amount, reason));
+                if (getBalance(accountId).getCurrent().compareTo(BigDecimal.ZERO) < 0) {
+                    cancelHold(hold, "Not enough money after hold.");
+                    throw new NotEnoughMoneyForOperationException(accountId);
+                }
+                return hold;
+            } else {
+                logger.debug("Cancel creation because not enough money.");
                 throw new NotEnoughMoneyForOperationException(accountId);
             }
-            return hold;
-        } else {
-            logger.debug("Cancel creation because not enough money.");
-            throw new NotEnoughMoneyForOperationException(accountId);
+        } finally {
+            accountService.unlockAccountById(accountId);
         }
     }
 

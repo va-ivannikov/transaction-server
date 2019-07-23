@@ -10,10 +10,7 @@ public class AccountRepository extends Repository<Account, Integer> {
     private final AtomicInteger counter = new AtomicInteger(0);
 
     @Override
-    public Account save(Account account) {
-        if (account.isNew()) {
-            account.setId(counter.incrementAndGet());
-        }
-        return super.save(account);
+    Integer getNextId() {
+        return counter.incrementAndGet();
     }
 }

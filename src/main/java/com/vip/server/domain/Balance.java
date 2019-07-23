@@ -4,12 +4,10 @@ import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 public class Balance {
-    private BigDecimal totalDeposit;
-    private BigDecimal totalWithdraw;
-    private BigDecimal totalHold;
-    private int accountId;
-
-    private Balance() {}
+    private final BigDecimal totalDeposit;
+    private final BigDecimal totalWithdraw;
+    private final BigDecimal totalHold;
+    private final int accountId;
 
     public Balance(int accountId, BigDecimal totalDeposit, BigDecimal totalWithdraw, BigDecimal totalHold) {
         this.accountId = accountId;
