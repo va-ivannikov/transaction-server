@@ -34,7 +34,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void checkIsAccountReadyForPayments(int accountId) throws AbstractAccountException {
-        Account account = getAccountIfExistsOrThrowNotFound(accountId);
+        final Account account = getAccountIfExistsOrThrowNotFound(accountId);
         if (account.isDeleted()) {
             throw new AccountIsDeletedException(accountId);
         }
@@ -45,8 +45,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void checkAccountIsActive(int accountId) throws AbstractAccountException {
-        Account account = getAccountIfExistsOrThrowNotFound(accountId);
-        if (account.isDeleted()) {
+        if (getAccountIfExistsOrThrowNotFound(accountId).isDeleted()) {
             throw new AccountIsDeletedException(accountId);
         }
     }

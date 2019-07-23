@@ -35,7 +35,7 @@ public class BalanceController {
     public BalanceUI addMoneyToAccount(@PathVariable int accountId, @Parameter BigDecimal amount) throws AbstractAccountException, AbstractBalanceException {
         logger.debug(String.format("add money to account: {accountId:%s, amount:%s}", accountId, amount.toString()));
         balanceService.addMoneyToAccount(accountId, amount, "manual deposit");
-        Balance balance = balanceService.getBalance(accountId);
+        final Balance balance = balanceService.getBalance(accountId);
         return BalanceUI.convertFromDomainBalance(balance);
     }
 
@@ -44,7 +44,7 @@ public class BalanceController {
     @Get(uri = "/accounts/{accountId}/money")
     public BalanceUI getAccountBalance(@PathVariable int accountId) throws AbstractAccountException {
         logger.debug(String.format("get balance: {accountId:%s}", accountId));
-        Balance balance = balanceService.getBalance(accountId);
+        final Balance balance = balanceService.getBalance(accountId);
         return BalanceUI.convertFromDomainBalance(balance);
     }
 
@@ -56,7 +56,7 @@ public class BalanceController {
         logger.debug("transaction:" + transactionRequestUI);
         int fromAccountId = transactionRequestUI.getFromAccountId();
         int toAccountId = transactionRequestUI.getToAccountId();
-        BigDecimal amount = transactionRequestUI.getAmount();
+        final BigDecimal amount = transactionRequestUI.getAmount();
         checkAccountIdIsPositive(fromAccountId);
         checkAccountIdIsPositive(toAccountId);
         checkAmountMoreThanZero(amount);

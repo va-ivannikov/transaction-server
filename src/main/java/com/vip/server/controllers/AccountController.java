@@ -28,7 +28,7 @@ public class AccountController {
     @Put(uri = "/accounts")
     public AccountUI createAccount(@NotBlank @Parameter String email) {
         logger.debug("create account {email:" + email + "}");
-        Account account = accountService.createAccount(email);
+        final Account account = accountService.createAccount(email);
         return AccountUI.fromDomainAccount(account);
     }
 
@@ -37,7 +37,7 @@ public class AccountController {
     @Get(uri = "/accounts/{accountId}")
     public AccountUI getAccount(@PathVariable int accountId) throws AccountNotExistsOrNotEnoughRightsException {
         logger.debug("get account {accountId:" + accountId + "}");
-        Account account = accountService.findAccount(accountId)
+        final Account account = accountService.findAccount(accountId)
                 .orElseThrow(AccountNotExistsOrNotEnoughRightsException::new);
         return AccountUI.fromDomainAccount(account);
     }
