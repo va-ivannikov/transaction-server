@@ -19,6 +19,7 @@ import javax.inject.Singleton;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.vip.server.domain.Operation.OperationType.DEPOSIT;
@@ -51,11 +52,12 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     public Balance getBalance(int accountId) throws AbstractAccountException {
         accountService.checkAccountIsActive(accountId);
-        return new Balance(accountId,
-                operationRepository.getSumByOperationAndAccountId(DEPOSIT, accountId),
-                operationRepository.getSumByOperationAndAccountId(WITHDRAW, accountId),
-                holdRepository.countHoldSumByAccountId(accountId)
-        );
+        final Function<Integer, Function<OperationRepository, Function<HoldRepository, Balance>>> createBalance =
+                id -> opRep -> holdRep -> new Balance(id,
+                        opRep.getSumByOperationAndAccountId(DEPOSIT, id),
+                        opRep.getSumByOperationAndAccountId(WITHDRAW, id),
+                        holdRep.countHoldSumByAccountId(id));
+        return createBalance.apply(accountId).apply(operationRepository).apply(holdRepository);
     }
 
     @Override
