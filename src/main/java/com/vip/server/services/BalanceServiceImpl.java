@@ -5,10 +5,10 @@ import com.vip.server.domain.Hold;
 import com.vip.server.domain.Operation;
 import com.vip.server.domain.ui.ResultUI;
 import com.vip.server.exceptions.account.AbstractAccountException;
+import com.vip.server.exceptions.account.OperationCantBePerformedOnTheSameAccount;
 import com.vip.server.exceptions.balance.AbstractBalanceException;
 import com.vip.server.exceptions.balance.AmountShouldBePositiveException;
 import com.vip.server.exceptions.balance.NotEnoughMoneyForOperationException;
-import com.vip.server.exceptions.balance.OperationCantBePerformedOnTheSameAccount;
 import com.vip.server.repositories.HoldRepository;
 import com.vip.server.repositories.OperationRepository;
 import io.micronaut.scheduling.annotation.Scheduled;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.vip.server.domain.Operation.OperationType.DEPOSIT;
@@ -59,39 +58,39 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public ResultUI transferMoneyFromAccountTo(int fromAccountById, int toAccountById, BigDecimal amount) throws AbstractBalanceException, AbstractAccountException {
-        logger.debug(
-                String.format("Transfer from account [%s] to account [%s] for amount [%s] started.",
-                        fromAccountById, toAccountById, amount));
-        if (fromAccountById == toAccountById) {
-            throw new OperationCantBePerformedOnTheSameAccount();
-        }
+    public synchronized ResultUI transferMoneyFromAccountTo(int sourceAccountId, int destinationAccountId, BigDecimal amount) throws AbstractAccountException, AmountShouldBePositiveException {
         checkAmountIsPositive(amount);
-        accountService.checkIsAccountReadyForPayments(fromAccountById);
-        accountService.checkIsAccountReadyForPayments(toAccountById);
+        final String reason = String.format("Transfer amount[%s] between accounts: from [%s] to [%s] .",
+                amount.toString(), sourceAccountId, destinationAccountId);
+        logger.info(reason);
+        validateReadyForTransferAccountsById(sourceAccountId, destinationAccountId);
+        Hold holdFromSource = new Hold(sourceAccountId, amount, reason);
+        Operation depositToAccountDestination = Operation.deposit(destinationAccountId, amount, holdFromSource.getOpeningReason());
+        Operation withdrawFromAccountSource = Operation.withdraw(sourceAccountId, amount, holdFromSource.getOpeningReason());
 
-        Optional<Hold> holdOptional = Optional.empty();
-        Optional<Operation> depositOptional = Optional.empty();
-        Optional<Operation> withdrawOptional = Optional.empty();
+        accountService.lockAccountById(sourceAccountId);
         try {
-            final String reason = String.format("Transfer amount[%s] between accounts: from [%s] to [%s] .",
-                    amount.toString(), fromAccountById, toAccountById);
-            holdOptional = Optional.of(createHoldForAccount(fromAccountById, amount, reason));
-            accountService.checkIsAccountReadyForPayments(toAccountById);
-            depositOptional = Optional.of(operationRepository.save(Operation.deposit(toAccountById, amount, reason)));
-            withdrawOptional = Optional.of(operationRepository.save(Operation.withdraw(fromAccountById, amount, reason)));
-            completeHold(holdOptional.get(), "Transfer complete.");
-            logger.debug("Transfer complete.");
+            holdFromSource = holdRepository.save(holdFromSource);
+            checkEnoughMoneyOnAccountForOperation(sourceAccountId, amount);
+            depositToAccountDestination = operationRepository.save(depositToAccountDestination);
+            withdrawFromAccountSource = operationRepository.save(withdrawFromAccountSource);
+            completeHold(holdFromSource, "Transfer complete.");
             return ResultUI.success(String.format("Transfer complete: $%s from account %s to %s.",
-                    amount, fromAccountById, toAccountById));
-        } catch (AbstractBalanceException |
-                AbstractAccountException ae) {
-            logger.error("Error during transfer.", ae);
-            holdOptional.ifPresent(hold -> cancelHold(hold, "Transfer aborted because: " + ae.getMessage()));
-            depositOptional.ifPresent(operationRepository::delete);
-            withdrawOptional.ifPresent(operationRepository::delete);
-            return ResultUI.fail("Transfer operations aborted, check please accounts.");
+                    amount, sourceAccountId, destinationAccountId));
+        } catch (AbstractAccountException | NotEnoughMoneyForOperationException e) {
+            rollbackOperationsByReason(holdFromSource, depositToAccountDestination, withdrawFromAccountSource, e);
+            return ResultUI.fail(e.getMessage());
+        } finally {
+            accountService.unlockAccountById(sourceAccountId);
         }
+    }
+
+    private void rollbackOperationsByReason(Hold holdFromSource, Operation depositToAccountDestination, Operation withdrawFromAccountSource, Throwable e) {
+        logger.error("Can't transfer between accounts [" + withdrawFromAccountSource.getAccountId() + "] -> " +
+                "[" + depositToAccountDestination.getAccountId() + "].", e);
+        operationRepository.delete(depositToAccountDestination);
+        operationRepository.delete(withdrawFromAccountSource);
+        cancelHold(holdFromSource, "Transfer is aborted.");
     }
 
     @Scheduled(fixedRate = "24h")
@@ -102,27 +101,6 @@ public class BalanceServiceImpl implements BalanceService {
                 .collect(Collectors.toList());
         logger.debug("Outdated holds found: " + outdated.size());
         outdated.forEach(hold -> cancelHold(hold, "Canceled by timeout"));
-    }
-
-    private Hold createHoldForAccount(int accountId, BigDecimal amount, String reason) throws AbstractBalanceException, AbstractAccountException {
-        logger.debug(String.format("Create hold for account[%s] on amount[%s] because: %s",
-                accountId, amount.toString(), reason));
-        try {
-            accountService.lockAccountById(accountId);
-            if (getBalance(accountId).getCurrent().compareTo(amount) >= 0) {
-                final Hold hold = holdRepository.save(new Hold(accountId, amount, reason));
-                if (getBalance(accountId).getCurrent().compareTo(BigDecimal.ZERO) < 0) {
-                    cancelHold(hold, "Not enough money after hold.");
-                    throw new NotEnoughMoneyForOperationException(accountId);
-                }
-                return hold;
-            } else {
-                logger.debug("Cancel creation because not enough money.");
-                throw new NotEnoughMoneyForOperationException(accountId);
-            }
-        } finally {
-            accountService.unlockAccountById(accountId);
-        }
     }
 
     private void cancelHold(Hold hold, String reason) {
@@ -137,9 +115,23 @@ public class BalanceServiceImpl implements BalanceService {
         holdRepository.save(hold);
     }
 
+    private void checkEnoughMoneyOnAccountForOperation(int accountId, BigDecimal expectedAmount) throws AbstractAccountException, NotEnoughMoneyForOperationException {
+        if (getBalance(accountId).getCurrent().compareTo(expectedAmount) < 0) {
+            throw new NotEnoughMoneyForOperationException(accountId);
+        }
+    }
+
     private void checkAmountIsPositive(BigDecimal amount) throws AmountShouldBePositiveException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new AmountShouldBePositiveException();
         }
+    }
+
+    private void validateReadyForTransferAccountsById(int fromAccountById, int toAccountById) throws OperationCantBePerformedOnTheSameAccount, AbstractAccountException {
+        if (fromAccountById == toAccountById) {
+            throw new OperationCantBePerformedOnTheSameAccount();
+        }
+        accountService.checkIsAccountReadyForPayments(fromAccountById);
+        accountService.checkIsAccountReadyForPayments(toAccountById);
     }
 }

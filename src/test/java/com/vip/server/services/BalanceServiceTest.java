@@ -4,16 +4,20 @@ import com.vip.server.domain.Account;
 import com.vip.server.domain.Balance;
 import com.vip.server.exceptions.account.AbstractAccountException;
 import com.vip.server.exceptions.account.AccountNotFoundException;
+import com.vip.server.exceptions.account.OperationCantBePerformedOnTheSameAccount;
 import com.vip.server.exceptions.balance.AbstractBalanceException;
 import com.vip.server.exceptions.balance.AmountShouldBePositiveException;
-import com.vip.server.exceptions.balance.OperationCantBePerformedOnTheSameAccount;
-import com.vip.server.repositories.OperationRepository;
 import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,8 +29,6 @@ public class BalanceServiceTest extends AbstractTest {
     private AccountService accountService;
     @Inject
     private BalanceService balanceService;
-    @Inject
-    private OperationRepository operationRepository;
 
     private Account account;
 
@@ -58,6 +60,40 @@ public class BalanceServiceTest extends AbstractTest {
         Balance balance2 = balanceService.getBalance(account2.getId());
         assertEquals(big50, balance1.getCurrent());
         assertEquals(big50, balance2.getCurrent());
+    }
+
+
+    @Test
+    void transferMoneyConcurrent() throws AbstractBalanceException, AbstractAccountException, InterruptedException {
+        Account account2 = accountService.createAccount(getRandomEmail());
+        balanceService.addMoneyToAccount(account.getId(), big100, "test");
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        List<Callable<String>> callableTasks = new ArrayList<>();
+
+        for (int i = 0; i < 50; i++) {
+            callableTasks.add(() -> {
+                try {
+                    balanceService.transferMoneyFromAccountTo(account.getId(), account2.getId(), BigDecimal.ONE);
+                } catch (AbstractBalanceException | AbstractAccountException e) {
+                    e.printStackTrace();
+                }
+                return "";
+            });
+        }
+        callableTasks.add(() -> {
+            try {
+                balanceService.transferMoneyFromAccountTo(account.getId(), account2.getId(), BigDecimal.valueOf(-10));
+            } catch (AbstractBalanceException | AbstractAccountException e) {
+                e.printStackTrace();
+            }
+            return "";
+        });
+
+        executorService.invokeAll(callableTasks);
+        executorService.shutdown();
+
+        assertEquals(big50, balanceService.getBalance(account.getId()).getCurrent());
+        assertEquals(big50, balanceService.getBalance(account2.getId()).getCurrent());
     }
 
     @Test
